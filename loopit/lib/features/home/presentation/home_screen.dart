@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:loopit_ui/loopit_ui.dart';
 
-class HomeScreen extends StatelessWidget {
+import '../../auth/application/auth_notifier.dart';
+import '../../dispatch/application/dispatch_stats_notifier.dart';
+import '../../dispatch/presentation/create_dispatch/create_dispatch_screen.dart';
+
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   String _getGreeting() {
@@ -16,7 +21,12 @@ class HomeScreen extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userState = ref.watch(authNotifierProvider);
+    final userName = userState.valueOrNull?.name ?? 'Loading...';
+
+    final statsAsync = ref.watch(dispatchStatsProvider);
+
     return Scaffold(
       backgroundColor: LoopitColors.grey50, // Light background for contrast with white cards
       body: SafeArea(
@@ -43,10 +53,10 @@ class HomeScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      const Text(
-                        'Arjun Nair',
-                        style: TextStyle(
-                          fontSize: 28,
+                      Text(
+                        '$userName!',
+                        style: const TextStyle(
+                          fontSize: 24,
                           fontWeight: FontWeight.bold,
                           color: LoopitColors.black,
                           fontFamily: 'Inter',
@@ -119,35 +129,44 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 32),
 
               // Statistics Grid
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
-                childAspectRatio: 1.25,
-                children: const [
-                  _StatCard(
-                    icon: Icons.inventory_2_outlined,
-                    value: '14',
-                    label: 'Active Dispatches',
+              statsAsync.when(
+                data: (stats) => GridView.count(
+                  crossAxisCount: 2,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  childAspectRatio: 1.25,
+                  children: [
+                    _StatCard(
+                      icon: Icons.inventory_2_outlined,
+                      value: stats.active.toString().padLeft(2, '0'),
+                      label: 'Active Dispatches',
+                    ),
+                    _StatCard(
+                      icon: Icons.download_outlined,
+                      value: stats.pending.toString().padLeft(2, '0'),
+                      label: 'Pending Collection',
+                    ),
+                    _StatCard(
+                      icon: Icons.local_shipping_outlined,
+                      value: stats.assigned.toString().padLeft(2, '0'),
+                      label: 'Assigned Deliveries',
+                    ),
+                    _StatCard(
+                      icon: Icons.check_circle_outline,
+                      value: stats.completed.toString().padLeft(2, '0'),
+                      label: 'Completed',
+                    ),
+                  ],
+                ),
+                loading: () => const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(32.0),
+                    child: CircularProgressIndicator(color: LoopitColors.black),
                   ),
-                  _StatCard(
-                    icon: Icons.download_outlined,
-                    value: '06',
-                    label: 'Pending Collection',
-                  ),
-                  _StatCard(
-                    icon: Icons.local_shipping_outlined,
-                    value: '23',
-                    label: 'Assigned Deliveries',
-                  ),
-                  _StatCard(
-                    icon: Icons.check_circle_outline,
-                    value: '42',
-                    label: 'Completed Today',
-                  ),
-                ],
+                ),
+                error: (e, st) => Center(child: Text('Error loading stats: $e')),
               ),
               const SizedBox(height: 32),
 
@@ -162,14 +181,26 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              const Row(
+              Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(child: _ActionCard(icon: Icons.add_box_outlined, label: 'Create\nDispatch')),
-                  SizedBox(width: 8),
-                  Expanded(child: _ActionCard(icon: Icons.description_outlined, label: 'My\nDispatches')),
-                  SizedBox(width: 8),
-                  Expanded(child: _ActionCard(icon: Icons.person_outline, label: 'Assigned\n')),
+                  Expanded(
+                    child: _ActionCard(
+                      icon: Icons.add_box_outlined,
+                      label: 'Create\nDispatch',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const CreateDispatchScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Expanded(child: _ActionCard(icon: Icons.description_outlined, label: 'My\nDispatches')),
+                  const SizedBox(width: 8),
+                  const Expanded(child: _ActionCard(icon: Icons.person_outline, label: 'Assigned\n')),
                 ],
               ),
               const SizedBox(height: 32), // Bottom padding for navigation bar overlap
@@ -255,15 +286,20 @@ class _StatCard extends StatelessWidget {
 class _ActionCard extends StatelessWidget {
   final IconData icon;
   final String label;
+  final VoidCallback? onTap;
 
   const _ActionCard({
     required this.icon,
     required this.label,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 4),
       decoration: BoxDecoration(
         color: LoopitColors.white,
@@ -295,6 +331,7 @@ class _ActionCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

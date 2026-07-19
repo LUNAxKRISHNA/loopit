@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:loopit_ui/loopit_ui.dart';
 import '../../main/presentation/main_scaffold.dart';
+import '../application/auth_notifier.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _rememberMe = true;
 
   @override
@@ -138,13 +140,29 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 32),
 
                     // --- Buttons ---
-                    PremiumButton(
-                      text: 'Sign In',
-                      onPressed: () {
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                            builder: (context) => const MainScaffold(),
-                          ),
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final authState = ref.watch(authNotifierProvider);
+                        final isLoading = authState.isLoading;
+
+                        return PremiumButton(
+                          text: isLoading ? 'Signing In...' : 'Sign In',
+                          onPressed: isLoading
+                              ? () {}
+                              : () {
+                                  ref
+                                      .read(authNotifierProvider.notifier)
+                                      .signIn('test@example.com', 'password')
+                                      .then((_) {
+                                    if (context.mounted && !ref.read(authNotifierProvider).hasError) {
+                                      Navigator.of(context).pushReplacement(
+                                        MaterialPageRoute(
+                                          builder: (context) => const MainScaffold(),
+                                        ),
+                                      );
+                                    }
+                                  });
+                                },
                         );
                       },
                     ),

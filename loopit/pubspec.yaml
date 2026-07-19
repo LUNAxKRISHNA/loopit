@@ -40,8 +40,9 @@ dependencies:
     path: packages/loopit_ui
   loopit_network:
     path: packages/loopit_network
-  loopit_database:
-    path: packages/loopit_database
+
+  supabase_flutter: ^2.16.0
+  flutter_dotenv: ^6.0.1
 
 dev_dependencies:
   flutter_test:
@@ -76,6 +77,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
+    - .env
     - assets/icons/
     - assets/images/
 

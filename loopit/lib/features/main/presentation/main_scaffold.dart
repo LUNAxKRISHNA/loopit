@@ -2,6 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:loopit_ui/loopit_ui.dart';
 import '../../home/presentation/home_screen.dart';
+import '../../notifications/presentation/notifications_screen.dart';
+import '../../profile/presentation/profile_screen.dart';
 
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
@@ -16,8 +18,8 @@ class _MainScaffoldState extends State<MainScaffold> {
   final List<Widget> _screens = [
     const HomeScreen(),
     const Center(child: Text('Dispatches Screen', style: TextStyle(fontFamily: 'Inter'))),
-    const Center(child: Text('Notifications Screen', style: TextStyle(fontFamily: 'Inter'))),
-    const Center(child: Text('Profile Screen', style: TextStyle(fontFamily: 'Inter'))),
+    const NotificationsScreen(),
+    const ProfileScreen(),
   ];
 
   @override
