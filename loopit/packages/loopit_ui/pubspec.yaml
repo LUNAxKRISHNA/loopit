@@ -1,0 +1,16 @@
+name: loopit_ui
+description: Premium Monochrome Design System for LOOPIT.
+version: 1.0.0
+publish_to: none
+
+environment:
+  sdk: ">=3.10.4 <4.0.0"
+  flutter: ">=3.3.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter

@@ -1,0 +1,17 @@
+name: loopit_database
+description: Offline-first drift database for LOOPIT chain-of-custody.
+version: 1.0.0
+publish_to: none
+
+environment:
+  sdk: ">=3.10.4 <4.0.0"
+
+dependencies:
+  drift: ^2.14.1
+  sqlite3_flutter_libs: ^0.5.18
+  path_provider: ^2.1.1
+  path: ^1.8.3
+
+dev_dependencies:
+  drift_dev: ^2.14.1
+  build_runner: ^2.4.6

@@ -1,0 +1,13 @@
+name: loopit_network
+description: Networking and Offline Queue Interceptors for LOOPIT.
+version: 1.0.0
+publish_to: none
+
+environment:
+  sdk: ">=3.10.4 <4.0.0"
+
+dependencies:
+  dio: ^5.7.0
+
+dev_dependencies:
+  test: ^1.24.0
