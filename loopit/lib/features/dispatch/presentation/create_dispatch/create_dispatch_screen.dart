@@ -2,9 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:loopit_ui/loopit_ui.dart';
 
-import '../../../core/application/campus_provider.dart';
-import '../../../core/domain/models/campus_model.dart';
 import '../widgets/priority_selector.dart';
+
+// Mock campus data
+class _MockCampus {
+  final String id;
+  final String name;
+  const _MockCampus(this.id, this.name);
+}
+
+const _mockCampuses = [
+  _MockCampus('campus-1', 'Main Campus'),
+  _MockCampus('campus-2', 'North Campus'),
+  _MockCampus('campus-3', 'South Campus'),
+  _MockCampus('campus-4', 'East Campus'),
+];
 
 class CreateDispatchScreen extends ConsumerStatefulWidget {
   const CreateDispatchScreen({super.key});
@@ -23,8 +35,10 @@ class _CreateDispatchScreenState extends ConsumerState<CreateDispatchScreen> {
 
   String _selectedPriority = 'Medium';
   String? _selectedItemType;
-  CampusModel? _selectedDestination;
+  _MockCampus? _selectedSenderCampus;
+  _MockCampus? _selectedDestination;
   DateTime? _selectedDate;
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -35,6 +49,48 @@ class _CreateDispatchScreenState extends ConsumerState<CreateDispatchScreen> {
     _receiverEmailController.dispose();
     _notesController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleCreateDispatch() async {
+    if (_titleController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a dispatch title')),
+      );
+      return;
+    }
+    if (_selectedSenderCampus == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a sender campus')),
+      );
+      return;
+    }
+    if (_selectedDestination == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a destination campus')),
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+
+    try {
+      // Mock submission delay
+      await Future.delayed(const Duration(seconds: 1));
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Dispatch created successfully!')),
+      );
+      navigator.pop();
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('Error creating dispatch: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
   }
 
   @override
@@ -143,28 +199,33 @@ class _CreateDispatchScreenState extends ConsumerState<CreateDispatchScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Card 3: Destination
+            // Card 3: Route Details
             _buildSectionCard(
-              title: 'Destination',
+              title: 'Route Details',
               children: [
-                ref.watch(campusesProvider).when(
-                  data: (campuses) {
-                    return _buildCampusDropdownField(
-                      value: _selectedDestination,
-                      hint: 'Destination Campus',
-                      icon: Icons.location_on_outlined,
-                      items: campuses,
-                      onChanged: (val) => setState(() => _selectedDestination = val),
-                    );
-                  },
-                  loading: () => const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator())),
-                  error: (err, stack) => const Text('Error loading campuses', style: TextStyle(color: Colors.red)),
+                _buildLabel('Sender Campus'),
+                _buildCampusDropdownField(
+                  value: _selectedSenderCampus,
+                  hint: 'Sender Campus',
+                  icon: Icons.unarchive_outlined,
+                  items: _mockCampuses,
+                  onChanged: (val) => setState(() => _selectedSenderCampus = val),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
+                _buildLabel('Destination Campus'),
+                _buildCampusDropdownField(
+                  value: _selectedDestination,
+                  hint: 'Destination Campus',
+                  icon: Icons.location_on_outlined,
+                  items: _mockCampuses,
+                  onChanged: (val) => setState(() => _selectedDestination = val),
+                ),
+                const SizedBox(height: 16),
+                _buildLabel('Expected Delivery Date'),
                 _buildReadOnlyFieldWithIcons(
-                  hint: _selectedDate == null 
-                      ? 'Expected delivery date' 
-                      : "\${_selectedDate!.day.toString().padLeft(2, '0')}/\${_selectedDate!.month.toString().padLeft(2, '0')}/\${_selectedDate!.year}",
+                  hint: _selectedDate == null
+                      ? 'Expected delivery date'
+                      : "${_selectedDate!.day.toString().padLeft(2, '0')}/${_selectedDate!.month.toString().padLeft(2, '0')}/${_selectedDate!.year}",
                   prefixIcon: Icons.calendar_today_outlined,
                   suffixIcon: Icons.calendar_today_outlined,
                   onTap: () async {
@@ -197,12 +258,10 @@ class _CreateDispatchScreenState extends ConsumerState<CreateDispatchScreen> {
               ],
             ),
             const SizedBox(height: 32),
-            
+
             PremiumButton(
-              text: 'Create Dispatch',
-              onPressed: () {
-                // Implement submission logic
-              },
+              text: _isSubmitting ? 'Creating...' : 'Create Dispatch',
+              onPressed: _isSubmitting ? () {} : () => _handleCreateDispatch(),
             ),
             const SizedBox(height: 32),
           ],
@@ -420,11 +479,11 @@ class _CreateDispatchScreenState extends ConsumerState<CreateDispatchScreen> {
   }
 
   Widget _buildCampusDropdownField({
-    required CampusModel? value,
+    required _MockCampus? value,
     required String hint,
     required IconData icon,
-    required List<CampusModel> items,
-    required ValueChanged<CampusModel?> onChanged,
+    required List<_MockCampus> items,
+    required ValueChanged<_MockCampus?> onChanged,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -438,7 +497,7 @@ class _CreateDispatchScreenState extends ConsumerState<CreateDispatchScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: DropdownButtonHideUnderline(
-              child: DropdownButton<CampusModel>(
+              child: DropdownButton<_MockCampus>(
                 value: value,
                 hint: Text(
                   hint,
@@ -458,7 +517,7 @@ class _CreateDispatchScreenState extends ConsumerState<CreateDispatchScreen> {
                 items: items.map((item) {
                   return DropdownMenuItem(
                     value: item,
-                    child: Text(item.campusName ?? 'Unknown Campus'),
+                    child: Text(item.name),
                   );
                 }).toList(),
                 onChanged: onChanged,

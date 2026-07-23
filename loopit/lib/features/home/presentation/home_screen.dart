@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:loopit_ui/loopit_ui.dart';
 
 import '../../auth/application/auth_notifier.dart';
-import '../../dispatch/application/dispatch_stats_notifier.dart';
+
 import '../../dispatch/presentation/create_dispatch/create_dispatch_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -25,7 +25,7 @@ class HomeScreen extends ConsumerWidget {
     final userState = ref.watch(authNotifierProvider);
     final userName = userState.valueOrNull?.name ?? 'Loading...';
 
-    final statsAsync = ref.watch(dispatchStatsProvider);
+    const mockStats = (active: 3, pending: 2, assigned: 5, completed: 10);
 
     return Scaffold(
       backgroundColor: LoopitColors.grey50, // Light background for contrast with white cards
@@ -129,44 +129,35 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(height: 32),
 
               // Statistics Grid
-              statsAsync.when(
-                data: (stats) => GridView.count(
-                  crossAxisCount: 2,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
-                  childAspectRatio: 1.25,
-                  children: [
-                    _StatCard(
-                      icon: Icons.inventory_2_outlined,
-                      value: stats.active.toString().padLeft(2, '0'),
-                      label: 'Active Dispatches',
-                    ),
-                    _StatCard(
-                      icon: Icons.download_outlined,
-                      value: stats.pending.toString().padLeft(2, '0'),
-                      label: 'Pending Collection',
-                    ),
-                    _StatCard(
-                      icon: Icons.local_shipping_outlined,
-                      value: stats.assigned.toString().padLeft(2, '0'),
-                      label: 'Assigned Deliveries',
-                    ),
-                    _StatCard(
-                      icon: Icons.check_circle_outline,
-                      value: stats.completed.toString().padLeft(2, '0'),
-                      label: 'Completed',
-                    ),
-                  ],
-                ),
-                loading: () => const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(32.0),
-                    child: CircularProgressIndicator(color: LoopitColors.black),
+              GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 16,
+                childAspectRatio: 1.25,
+                children: [
+                  _StatCard(
+                    icon: Icons.inventory_2_outlined,
+                    value: mockStats.active.toString().padLeft(2, '0'),
+                    label: 'Active Dispatches',
                   ),
-                ),
-                error: (e, st) => Center(child: Text('Error loading stats: $e')),
+                  _StatCard(
+                    icon: Icons.download_outlined,
+                    value: mockStats.pending.toString().padLeft(2, '0'),
+                    label: 'Pending Collection',
+                  ),
+                  _StatCard(
+                    icon: Icons.local_shipping_outlined,
+                    value: mockStats.assigned.toString().padLeft(2, '0'),
+                    label: 'Assigned Deliveries',
+                  ),
+                  _StatCard(
+                    icon: Icons.check_circle_outline,
+                    value: mockStats.completed.toString().padLeft(2, '0'),
+                    label: 'Completed',
+                  ),
+                ],
               ),
               const SizedBox(height: 32),
 

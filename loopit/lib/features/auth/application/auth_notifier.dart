@@ -1,21 +1,38 @@
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../../core/domain/models/user_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/auth_repository.dart';
 
-part 'auth_notifier.g.dart';
+// Simple mock user model (no Freezed)
+class UserModel {
+  final String id;
+  final String? name;
+  final String? email;
+  final String? phone;
+  final DateTime createdAt;
 
-@riverpod
-class AuthNotifier extends _$AuthNotifier {
-  @override
-  AsyncValue<UserModel?> build() {
+  const UserModel({
+    required this.id,
+    this.name,
+    this.email,
+    this.phone,
+    required this.createdAt,
+  });
+}
+
+final authNotifierProvider =
+    StateNotifierProvider<AuthNotifier, AsyncValue<UserModel?>>((ref) {
+  return AuthNotifier(ref.read(authRepositoryProvider));
+});
+
+class AuthNotifier extends StateNotifier<AsyncValue<UserModel?>> {
+  final AuthRepository _repository;
+
+  AuthNotifier(this._repository) : super(const AsyncLoading()) {
     _fetchUser();
-    return const AsyncLoading();
   }
 
   Future<void> _fetchUser() async {
     try {
-      final repository = ref.read(authRepositoryProvider);
-      final user = await repository.getCurrentUser();
+      final user = await _repository.getCurrentUser();
       state = AsyncData(user);
     } catch (e, st) {
       state = AsyncError(e, st);
@@ -25,9 +42,8 @@ class AuthNotifier extends _$AuthNotifier {
   Future<void> signIn(String email, String password) async {
     state = const AsyncLoading();
     try {
-      final repository = ref.read(authRepositoryProvider);
-      await repository.signIn(email, password);
-      final user = await repository.getCurrentUser();
+      await _repository.signIn(email, password);
+      final user = await _repository.getCurrentUser();
       state = AsyncData(user);
     } catch (e, st) {
       state = AsyncError(e, st);
@@ -37,8 +53,7 @@ class AuthNotifier extends _$AuthNotifier {
   Future<void> signOut() async {
     state = const AsyncLoading();
     try {
-      final repository = ref.read(authRepositoryProvider);
-      await repository.signOut();
+      await _repository.signOut();
       state = const AsyncData(null);
     } catch (e, st) {
       state = AsyncError(e, st);

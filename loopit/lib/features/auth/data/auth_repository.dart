@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/domain/models/user_model.dart';
+import '../application/auth_notifier.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository();
@@ -7,7 +7,7 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 
 class AuthRepository {
   Future<UserModel> getCurrentUser() async {
-    // Return a mocked user for now, as requested.
+    // Mock user
     return UserModel(
       id: 'mock-user-id-1234',
       name: 'Krishna',
@@ -18,12 +18,10 @@ class AuthRepository {
   }
 
   Future<void> signIn(String email, String password) async {
-    // Mock sign in delay
     await Future.delayed(const Duration(seconds: 1));
   }
 
   Future<void> signOut() async {
-    // Mock sign out delay
     await Future.delayed(const Duration(milliseconds: 500));
   }
 }
